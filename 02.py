@@ -160,3 +160,7 @@ if flag:
     print(torch.acos(t))
     print(torch.tan(t))
     print(torch.atan(t))
+    # atan返回x的正切值,取值范围为-pi/2~pi/2, atan2返回的是x/y的正切值, 取值范围为-pi~pi
+    t1 = torch.tensor([4., 2.])
+    t2 = torch.tensor([2., 1.])
+    print(torch.atan2(t1, t2))
