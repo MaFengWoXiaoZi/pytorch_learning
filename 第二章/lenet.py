@@ -2,9 +2,80 @@
 '''
 lenet网络模型
 '''
-
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+def conv_input(ni, nf):
+    return nn.Conv2d(ni, nf, kernel_size = 7, stride = 1, padding = 3)
+
+def conv(ni, nf):
+    return nn.Conv2d(ni, nf, kernel_size = 3, stride = 1, padding = 1)
+
+def conv_half_reduce(ni, nf):
+    return nn.Conv2d(ni, nf, kernel_size = 3, stride = 2, padding = 1)
+
+class MyNet(nn.Module):
+    def __init__(self, classes):
+        super(MyNet, self).__init__()
+        self.conv1 = conv_input(3, 16)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2_1 = conv_half_reduce(16, 32)
+        self.bn2_1 = nn.BatchNorm2d(32)
+        self.conv2_2 = conv(32, 32)
+        self.bn2_2 = nn.BatchNorm2d(32)
+        self.conv3_1 = conv_half_reduce(32, 64)
+        self.bn3_1 = nn.BatchNorm2d(64)
+        self.conv3_2 = conv(64, 64)
+        self.bn3_2 = nn.BatchNorm2d(64)
+        self.conv4_1 = conv_half_reduce(64, 128)
+        self.bn4_1 = nn.BatchNorm2d(128)
+        self.conv4_2 = conv(128, 128)
+        self.bn4_2 = nn.BatchNorm2d(128)
+        
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.bn5_avg = nn.BatchNorm2d(128)
+        
+        self.max_pool = nn.AdaptiveMaxPool2d((1, 1))
+        self.bn5_max = nn.BatchNorm2d(128)
+        
+        self.dropout1 = nn.Dropout(0.25)
+        self.fc1 = nn.Linear(256, 128)
+        self.dropout2 = nn.Dropout(0.5)
+        self.fc2 = nn.Linear(128, classes)
+        
+    def forward(self, x):
+        out = self.conv1(x)
+        out = F.relu(self.bn1(out))
+        out = self.conv2_1(out)
+        out = F.relu(self.bn2_1(out))
+        out = self.conv2_2(out)
+        out = F.relu(self.bn2_2(out))
+        out = self.conv3_1(out)
+        out = F.relu(self.bn3_1(out))
+        out = self.conv3_2(out)
+        out = F.relu(self.bn3_2(out))
+        out = self.conv4_1(out)
+        out = F.relu(self.bn4_1(out))
+        out = self.conv4_2(out)
+        out = F.relu(self.bn4_2(out))
+        
+        out1 = self.avg_pool(out)
+        out1 = self.bn5_avg(out1)
+        
+        out2 = self.max_pool(out)
+        out2 = self.bn5_max(out2)
+        
+        out = torch.cat((out1, out2), dim = 1)
+        out = out.view(out.size(0), -1)
+        
+        out = self.dropout1(out)
+        out = F.relu(self.fc1(out))
+        out = self.dropout2(out)
+        out = self.fc2(out)
+        
+        return out
+        
 
 class LeNet(nn.Module):
     def __init__(self, classes):
