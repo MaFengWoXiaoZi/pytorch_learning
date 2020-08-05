@@ -5,7 +5,7 @@ lenet网络模型
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+ 
 def conv_input(ni, nf):
     return nn.Conv2d(ni, nf, kernel_size = 7, stride = 1, padding = 3)
 
